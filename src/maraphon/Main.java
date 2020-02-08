@@ -5,7 +5,7 @@ import maraphon.obstacle.Cross;
 import maraphon.obstacle.Obstacle;
 import maraphon.obstacle.Wall;
 import maraphon.obstacle.Water;
-
+// проверка
 public class Main {
     public static void main(String[] args) {
         Competitor[] competitors ={
