@@ -1,0 +1,17 @@
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.VBox?>
+
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<VBox fx:controller="sample.Controller"
+      xmlns:fx="http://javafx.com/fxml" alignment="center">
+    <TextArea fx:id="textArea" editable="false" VBox.vgrow ="ALWAYS"/>
+
+    <HBox>
+        <TextField fx:id="textField" HBox.hgrow="ALWAYS" promptText="Пишите здесь..." onAction="#btnPush"/>
+        <Button text="Отправить" onAction="#btnPush"/>
+
+    </HBox>
+
+</VBox>
