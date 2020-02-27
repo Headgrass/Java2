@@ -43,17 +43,41 @@ public class Server {
             }
         }
     }
-public void broadcastMsg(String msg){
+    public void broadcastMsg(String nick, String msg){
         for(ClientHandler c: clients){
-            c.sendMsg(msg);
+            c.sendMsg(nick + " : " + msg);
             }
         }
 
+    public void privMsg(ClientHandler sender, String reciever, String msg){
+        String message = String.format("[ %s ] private [ %s ] : %s", sender.getnickname(), reciever, msg);
+
+        for(ClientHandler c: clients){
+            if(c.getnickname().equals(reciever)){
+                c.sendMsg(message);
+                if(!sender.getnickname().equals(reciever)){
+                    sender.sendMsg(message);
+                }
+                return;
+            }
+        }
+        sender.sendMsg("not found user:" + reciever);
+    }
         public void subscribe(ClientHandler clientHandler){
         clients.add(clientHandler);
         }
         public void unsubscribe(ClientHandler clientHandler){
         clients.remove(clientHandler);
     }
+
+    public boolean isLoginAuthorized(String login){
+        for(ClientHandler c:clients){
+            if(c.getLogin().equals(login)){
+                return true;
+            }
+        }return false;
+    }
 }
+
+
 

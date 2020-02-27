@@ -12,6 +12,7 @@ public class ClientHandler {
     Server server;
     private String nick;
     private String login;
+    private String clientName;
 
     public ClientHandler(Socket socket, Server server) {
 
@@ -48,12 +49,21 @@ public class ClientHandler {
                     //цикл работы
                     while (true) {
                         String str = in.readUTF();
-                        if (str.equals("/end")) {
-                            out.writeUTF("/end");
-                            break;
+                        if (str.startsWith("/")) {
+                            if (str.equals("/end")) {
+                                out.writeUTF("/end");
+                                break;
+                            }
+                            if (str.startsWith("/w ")){
+                                String[] msg = str.split(" ", 3);
+                                if(msg.length==3){
+                                    server.privMsg(this, msg [1], msg[2]);
+                                }
+                            }
+                            }else
+                                server.broadcastMsg(nick, str);
                         }
-                        server.broadcastMsg(str);
-                    }
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }finally {
@@ -82,11 +92,22 @@ public class ClientHandler {
         }
 
     }
+    public String getnickname() {
+        return nick;
+    }
+    
+    
     public void sendMsg(String msg){
         try {
             out.writeUTF(msg);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    public String getNick(){
+        return nick;
+    }
+    public String getLogin(){
+        return login;
     }
 }
