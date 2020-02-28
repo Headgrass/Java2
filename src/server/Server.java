@@ -8,7 +8,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 import java.util.Vector;
-import java.util.concurrent.Callable;
 
 public class Server {
     private Vector<ClientHandler> clients;
@@ -18,7 +17,7 @@ public class Server {
         return authService;
     }
 
-    public Server(){
+    public Server() {
         clients = new Vector<>();
         authService = new SimpleAuthService();
         ServerSocket server = null;
@@ -27,57 +26,77 @@ public class Server {
         try {
             server = new ServerSocket(8188);
             System.out.println("Сервер запустился");
-        while (true){
-            socket = server.accept();
-            System.out.println("Клиент подключился");
-            new ClientHandler(socket, this);
-}
+
+            while (true) {
+                socket = server.accept();
+                System.out.println("Клиент подключился");
+                new ClientHandler(socket, this);
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
-        }finally {
-            try{
+        } finally {
+            try {
                 server.close();
-            }catch (IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
-    public void broadcastMsg(String nick, String msg){
-        for(ClientHandler c: clients){
+
+    public void broadcastMsg(String nick, String msg) {
+        for (ClientHandler c : clients) {
             c.sendMsg(nick + " : " + msg);
-            }
         }
+    }
 
-    public void privMsg(ClientHandler sender, String reciever, String msg){
-        String message = String.format("[ %s ] private [ %s ] : %s", sender.getnickname(), reciever, msg);
+    public void privateMsg(ClientHandler sender, String receiver, String msg) {
+        String message = String.format("[ %s ] private [ %s ] : %s", sender.getNick(), receiver, msg);
 
-        for(ClientHandler c: clients){
-            if(c.getnickname().equals(reciever)){
+        for (ClientHandler c : clients) {
+            if (c.getNick().equals(receiver)) {
                 c.sendMsg(message);
-                if(!sender.getnickname().equals(reciever)){
+                if (!sender.getNick().equals(receiver)) {
                     sender.sendMsg(message);
                 }
                 return;
             }
         }
-        sender.sendMsg("not found user:" + reciever);
-    }
-        public void subscribe(ClientHandler clientHandler){
-        clients.add(clientHandler);
-        }
-        public void unsubscribe(ClientHandler clientHandler){
-        clients.remove(clientHandler);
+
+        sender.sendMsg("not found user :" + receiver);
     }
 
-    public boolean isLoginAuthorized(String login){
-        for(ClientHandler c:clients){
-            if(c.getLogin().equals(login)){
+
+    public void subscribe(ClientHandler clientHandler) {
+        clients.add(clientHandler);
+        broadcastClientList();
+    }
+
+    public void unsubscribe(ClientHandler clientHandler) {
+        clients.remove(clientHandler);
+        broadcastClientList();
+    }
+
+
+    public boolean isLoginAuthorized(String login) {
+        for (ClientHandler c : clients) {
+            if (c.getLogin().equals(login)) {
                 return true;
             }
-        }return false;
+        }
+        return false;
+    }
+
+    public void broadcastClientList() {
+        StringBuilder sb = new StringBuilder("/clientlist ");
+
+        for (ClientHandler c : clients) {
+            sb.append(c.getNick()).append(" ");
+        }
+
+        String msg = sb.toString();
+        for (ClientHandler c : clients) {
+            c.sendMsg(msg);
+        }
     }
 }
-
-
-

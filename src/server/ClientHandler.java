@@ -12,61 +12,86 @@ public class ClientHandler {
     Server server;
     private String nick;
     private String login;
-    private String clientName;
 
     public ClientHandler(Socket socket, Server server) {
-
         try {
             this.socket = socket;
             this.server = server;
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
 
-            new Thread(() ->{
+            new Thread(() -> {
                 try {
+//                    socket.setSoTimeout(0);
                     //цикл аутентификации
-                    while (true){
+                    while (true) {
                         String str = in.readUTF();
-                        if(str.startsWith("/auth")){
+                        if (str.startsWith("/reg ")) {
                             String[] token = str.split(" ");
-                            String newnick = server.getAuthService()
+                            boolean b = server
+                                    .getAuthService()
+                                    .registration(token[1],token[2], token[3]);
+                            if(b){
+                                sendMsg("Регистрация прошла успешно");
+                            } else {
+                                sendMsg("Пользователь не может быть зарегистрирован");
+                            }
+                        }
+
+                        if (str.equals("/end")) {
+                            throw new RuntimeException("сами ");
+                        }
+                        if (str.startsWith("/auth ")) {
+                            String[] token = str.split(" ");
+                            if (token.length < 3) {
+                                continue;
+                            }
+                            String newNick = server
+                                    .getAuthService()
                                     .getNicknameByLoginAndPassword(token[1], token[2]);
-                            if(newnick != null){
-                                sendMsg("/authok " + newnick);
-                                nick = newnick;
+                            if (newNick != null) {
                                 login = token[1];
-                                server.subscribe(this);
-                                System.out.println("Клиент " + nick + " подключился");
-                                break;
-                            }else {
+                                if (!server.isLoginAuthorized(login)) {
+                                    sendMsg("/authok " + newNick);
+                                    nick = newNick;
+                                    server.subscribe(this);
+                                    System.out.println("Клиент " + nick + " подключился");
+                                    break;
+                                } else {
+                                    sendMsg("С этим логином уже авторизовались");
+                                }
+                            } else {
                                 sendMsg("Неверный логин / пароль");
                             }
                         }
-                        break;
                     }
-
 
                     //цикл работы
                     while (true) {
                         String str = in.readUTF();
+
                         if (str.startsWith("/")) {
                             if (str.equals("/end")) {
                                 out.writeUTF("/end");
                                 break;
                             }
-                            if (str.startsWith("/w ")){
-                                String[] msg = str.split(" ", 3);
-                                if(msg.length==3){
-                                    server.privMsg(this, msg [1], msg[2]);
+                            if (str.startsWith("/w ")) {
+                                String[] token = str.split(" ", 3);
+                                if (token.length == 3) {
+                                    server.privateMsg(this, token[1], token[2]);
                                 }
                             }
-                            }else
-                                server.broadcastMsg(nick, str);
+                        } else {
+                            server.broadcastMsg(nick, str);
                         }
 
+
+                    }
+                } catch (RuntimeException e) {
+                    System.out.println("сами вызвали исключение.");
                 } catch (IOException e) {
                     e.printStackTrace();
-                }finally {
+                } finally {
                     server.unsubscribe(this);
                     try {
                         in.close();
@@ -87,27 +112,26 @@ public class ClientHandler {
                 }
             }).start();
 
+
         } catch (IOException e) {
             e.printStackTrace();
         }
 
     }
-    public String getnickname() {
-        return nick;
-    }
-    
-    
-    public void sendMsg(String msg){
+
+    public void sendMsg(String msg) {
         try {
             out.writeUTF(msg);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    public String getNick(){
+
+    public String getNick() {
         return nick;
     }
-    public String getLogin(){
+
+    public String getLogin() {
         return login;
     }
 }
