@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 public class ClientHandler {
     Socket socket = null;
@@ -22,7 +23,7 @@ public class ClientHandler {
 
             new Thread(() -> {
                 try {
-//                    socket.setSoTimeout(0);
+                   socket.setSoTimeout(6000);
                     //цикл аутентификации
                     while (true) {
                         String str = in.readUTF();
@@ -30,8 +31,8 @@ public class ClientHandler {
                             String[] token = str.split(" ");
                             boolean b = server
                                     .getAuthService()
-                                    .registration(token[1],token[2], token[3]);
-                            if(b){
+                                    .registration(token[1], token[2], token[3]);
+                            if (b) {
                                 sendMsg("Регистрация прошла успешно");
                             } else {
                                 sendMsg("Пользователь не может быть зарегистрирован");
@@ -56,6 +57,7 @@ public class ClientHandler {
                                     nick = newNick;
                                     server.subscribe(this);
                                     System.out.println("Клиент " + nick + " подключился");
+                                    socket.setSoTimeout(0);
                                     break;
                                 } else {
                                     sendMsg("С этим логином уже авторизовались");
@@ -87,6 +89,8 @@ public class ClientHandler {
 
 
                     }
+                } catch (SocketTimeoutException e){
+                    System.out.println("Превышено время ожидания авторизации");
                 } catch (RuntimeException e) {
                     System.out.println("сами вызвали исключение.");
                 } catch (IOException e) {
