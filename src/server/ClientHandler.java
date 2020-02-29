@@ -57,7 +57,10 @@ public class ClientHandler {
                                     nick = newNick;
                                     server.subscribe(this);
                                     System.out.println("Клиент " + nick + " подключился");
+
+                                    // в случае успешного подключения сбрасываем счетчик времени
                                     socket.setSoTimeout(0);
+                                    
                                     break;
                                 } else {
                                     sendMsg("С этим логином уже авторизовались");
